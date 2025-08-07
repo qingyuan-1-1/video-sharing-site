@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传视频 - 视频分享平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎬 视频分享平台</h1>
+            <nav>
+                <a href="index.html">首页</a>
+                <a href="upload.html" class="nav-active">上传视频</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="upload-section">
+            <h2>📹 上传新视频</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="videoTitle">视频标题 *</label>
+                    <input type="text" id="videoTitle" name="title" required placeholder="给你的视频起个好名字">
+                </div>
+                
+                <div class="form-group">
+                    <label for="videoDescription">视频描述</label>
+                    <textarea id="videoDescription" name="description" rows="4" placeholder="描述一下你的视频内容..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="videoFile">选择视频文件 *</label>
+                    <div class="file-input-container">
+                        <input type="file" id="videoFile" name="video" accept="video/*" required>
+                        <div class="file-input-text">
+                            <span id="fileText">点击选择视频文件</span>
+                            <small>支持: MP4, AVI, MOV, WMV (最大50MB)</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" id="uploadBtn">
+                        <span>📤 上传视频</span>
+                    </button>
+                </div>
+            </form>
+            
+            <div id="uploadProgress" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p>上传中，请稍候...</p>
+                </div>
+            </div>
+            
+            <div id="uploadResult"></div>
+        </div>
+    </main>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadResult = document.getElementById('uploadResult');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoFile = document.getElementById('videoFile');
+        const fileText = document.getElementById('fileText');
+
+        // 文件选择处理
+        videoFile.addEventListener('change', function() {
+            if (this.files[0]) {
+                const file = this.files[0];
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+                fileText.textContent = `${file.name} (${sizeInMB}MB)`;
+                
+                if (file.size > 50 * 1024 * 1024) {
+                    alert('文件太大！请选择小于50MB的视频文件。');
+                    this.value = '';
+                    fileText.textContent = '点击选择视频文件';
+                }
+            }
+        });
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            
+            // 验证
+            if (!formData.get('video')) {
+                alert('请选择视频文件！');
+                return;
+            }
+            
+            if (!formData.get('title').trim()) {
+                alert('请输入视频标题！');
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span>上传中...</span>';
+            uploadProgress.style.display = 'block';
+            uploadResult.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    uploadResult.innerHTML = `
+                        <div class="success-message">
+                            <h3>✅ 上传成功!</h3>
+                            <p>视频《${result.video.title}》已成功上传</p>
+                            <div class="result-actions">
+                                <button onclick="location.href='index.html'" class="btn-primary">查看所有视频</button>
+                                <button onclick="resetForm()" class="btn-secondary">继续上传</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    uploadResult.innerHTML = `
+                        <div class="error-message">
+                            <h3>❌ 上传失败</h3>
+                            <p>${result.error || '未知错误'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('上传错误:', error);
+                uploadResult.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ 上传失败</h3>
+                        <p>网络错误，请检查网络连接后重试</p>
+                    </div>
+                `;
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<span>📤 上传视频</span>';
+                uploadProgress.style.display = 'none';
+            }
+        });
+
+        function resetForm() {
+            uploadForm.reset();
+            fileText.textContent = '点击选择视频文件';
+            uploadResult.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
