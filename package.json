@@ -3,22 +3,16 @@
   "version": "1.0.0",
   "description": "视频分享网站",
   "main": "api/index.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "node api/index.js",
-    "build": "echo 'Build successful'"
+    "build": "echo 'Build completed successfully'"
   },
   "dependencies": {
-    "express": "4.19.2",
+    "express": "4.18.3",
     "multer": "1.4.4",
     "cors": "2.8.5"
   },
   "engines": {
-    "node": "20.x",
-    "npm": ">=8.0.0"
-  },
-  "keywords": ["video", "sharing", "upload", "streaming"],
-  "author": "你的名字",
-  "license": "MIT"
+    "node": "22.x"
+  }
 }
